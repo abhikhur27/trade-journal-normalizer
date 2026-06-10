@@ -1,0 +1,34 @@
+{
+  "trade_count": 3,
+  "symbols": {
+    "AAPL": {
+      "trades": 1,
+      "buy_quantity": 0.0,
+      "sell_quantity": 4.0,
+      "gross_notional": 793.0,
+      "fees": 0.35,
+      "net_cash_flow": 792.65
+    },
+    "MSFT": {
+      "trades": 1,
+      "buy_quantity": 6.0,
+      "sell_quantity": 0.0,
+      "gross_notional": 2526.6,
+      "fees": 0.4,
+      "net_cash_flow": -2527.0
+    },
+    "NVDA": {
+      "trades": 1,
+      "buy_quantity": 10.0,
+      "sell_quantity": 0.0,
+      "gross_notional": 1125.0,
+      "fees": 0.5,
+      "net_cash_flow": -1125.5
+    }
+  },
+  "journal_totals": {
+    "fees": 1.25,
+    "gross_notional": 4444.6,
+    "net_cash_flow": -2859.85
+  }
+}

@@ -1,0 +1,5 @@
+Trade Date,Ticker,Action,Shares,Avg Price,Commission,Description
+2026-05-01,NVDA,Buy,10,112.50,0.50,Starter position
+2026-05-03,AAPL,Sell,4,198.25,0.35,Trim after earnings
+2026-05-03,AAPL,Sell,4,198.25,0.35,Trim after earnings
+2026-05-08,MSFT,Buy,6,421.10,0.40,Re-entry

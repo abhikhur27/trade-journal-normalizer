@@ -1,0 +1,4 @@
+date,symbol,action,quantity,price,fees,signed_quantity,gross_notional,cash_flow,note,source_row
+2026-05-01,NVDA,BUY,10,112.5,0.5,10,1125,-1125.5,Starter position,2
+2026-05-03,AAPL,SELL,4,198.25,0.35,-4,793,792.65,Trim after earnings,3
+2026-05-08,MSFT,BUY,6,421.1,0.4,6,2526.6,-2527,Re-entry,5
