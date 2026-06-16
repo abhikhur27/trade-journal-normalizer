@@ -13,6 +13,7 @@ Different exports label the same fields differently: `Ticker` vs `Symbol`, `Qty`
 - Computes signed quantity, gross notional, and net cash flow.
 - Writes a portable normalized CSV.
 - Writes a summary JSON with per-symbol totals and whole-journal totals.
+- Optionally writes a position snapshot CSV with net quantity and average buy/sell price per symbol.
 - Optional exact-row dedupe for duplicated export lines.
 
 ## Normalized output schema
@@ -41,6 +42,7 @@ With explicit outputs:
 python trade_journal_normalizer.py examples/sample_trades.csv ^
   --output-csv out/normalized.csv ^
   --summary-json out/summary.json ^
+  --position-csv out/positions.csv ^
   --drop-duplicates
 ```
 

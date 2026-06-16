@@ -72,6 +72,11 @@ def parse_args() -> argparse.Namespace:
         help="Where to write per-symbol and whole-journal summary JSON.",
     )
     parser.add_argument(
+        "--position-csv",
+        type=Path,
+        help="Optional CSV path for per-symbol open-position and basis snapshots.",
+    )
+    parser.add_argument(
         "--drop-duplicates",
         action="store_true",
         help="Drop exact duplicate normalized rows after parsing.",
@@ -202,6 +207,8 @@ def build_summary(trades: list[NormalizedTrade]) -> dict[str, object]:
             "gross_notional": 0.0,
             "fees": 0.0,
             "net_cash_flow": 0.0,
+            "buy_notional": 0.0,
+            "sell_notional": 0.0,
         }
     )
     total_fees = 0.0
@@ -218,19 +225,42 @@ def build_summary(trades: list[NormalizedTrade]) -> dict[str, object]:
         bucket["gross_notional"] += trade.gross_notional
         bucket["fees"] += trade.fees
         bucket["net_cash_flow"] += trade.cash_flow
+        if trade.action == "BUY":
+            bucket["buy_notional"] += trade.gross_notional
+        else:
+            bucket["sell_notional"] += trade.gross_notional
         total_fees += trade.fees
         total_notional += trade.gross_notional
         total_cash_flow += trade.cash_flow
 
+    position_rows = []
+    symbol_summary = {}
+    for symbol, stats in sorted(by_symbol.items()):
+        buy_quantity = float(stats["buy_quantity"])
+        sell_quantity = float(stats["sell_quantity"])
+        buy_notional = float(stats["buy_notional"])
+        sell_notional = float(stats["sell_notional"])
+        net_quantity = round(buy_quantity - sell_quantity, 4)
+        avg_buy_price = round(buy_notional / buy_quantity, 4) if buy_quantity else 0.0
+        avg_sell_price = round(sell_notional / sell_quantity, 4) if sell_quantity else 0.0
+        row = {
+            "trades": int(stats["trades"]),
+            "buy_quantity": round(buy_quantity, 4),
+            "sell_quantity": round(sell_quantity, 4),
+            "net_quantity": net_quantity,
+            "avg_buy_price": avg_buy_price,
+            "avg_sell_price": avg_sell_price,
+            "gross_notional": round(float(stats["gross_notional"]), 4),
+            "fees": round(float(stats["fees"]), 4),
+            "net_cash_flow": round(float(stats["net_cash_flow"]), 4),
+        }
+        symbol_summary[symbol] = row
+        position_rows.append({"symbol": symbol, **row})
+
     return {
         "trade_count": len(trades),
-        "symbols": {
-            symbol: {
-                key: round(value, 4) if isinstance(value, float) else value
-                for key, value in stats.items()
-            }
-            for symbol, stats in sorted(by_symbol.items())
-        },
+        "symbols": symbol_summary,
+        "positions": position_rows,
         "journal_totals": {
             "fees": round(total_fees, 4),
             "gross_notional": round(total_notional, 4),
@@ -239,7 +269,28 @@ def build_summary(trades: list[NormalizedTrade]) -> dict[str, object]:
     }
 
 
+def write_position_csv(path: Path, positions: list[dict[str, object]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "symbol",
+        "trades",
+        "buy_quantity",
+        "sell_quantity",
+        "net_quantity",
+        "avg_buy_price",
+        "avg_sell_price",
+        "gross_notional",
+        "fees",
+        "net_cash_flow",
+    ]
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(positions)
+
+
 def write_normalized_csv(path: Path, trades: list[NormalizedTrade]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = [
         "date",
         "symbol",
@@ -278,11 +329,17 @@ def main() -> int:
 
     output_csv = args.output_csv or args.input_csv.with_name(f"{args.input_csv.stem}.normalized.csv")
     summary_json = args.summary_json or args.input_csv.with_name(f"{args.input_csv.stem}.summary.json")
+    summary_payload = build_summary(trades)
     write_normalized_csv(output_csv, trades)
-    summary_json.write_text(json.dumps(build_summary(trades), indent=2), encoding="utf-8")
+    summary_json.parent.mkdir(parents=True, exist_ok=True)
+    summary_json.write_text(json.dumps(summary_payload, indent=2), encoding="utf-8")
+    if args.position_csv:
+        write_position_csv(args.position_csv, summary_payload["positions"])
 
     print(f"Normalized {len(trades)} trades into {output_csv}")
     print(f"Wrote summary JSON to {summary_json}")
+    if args.position_csv:
+        print(f"Wrote position CSV to {args.position_csv}")
     return 0
 
 
