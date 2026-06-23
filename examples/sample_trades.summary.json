@@ -5,6 +5,9 @@
       "trades": 1,
       "buy_quantity": 0.0,
       "sell_quantity": 4.0,
+      "net_quantity": -4.0,
+      "avg_buy_price": 0.0,
+      "avg_sell_price": 198.25,
       "gross_notional": 793.0,
       "fees": 0.35,
       "net_cash_flow": 792.65
@@ -13,6 +16,9 @@
       "trades": 1,
       "buy_quantity": 6.0,
       "sell_quantity": 0.0,
+      "net_quantity": 6.0,
+      "avg_buy_price": 421.1,
+      "avg_sell_price": 0.0,
       "gross_notional": 2526.6,
       "fees": 0.4,
       "net_cash_flow": -2527.0
@@ -21,11 +27,64 @@
       "trades": 1,
       "buy_quantity": 10.0,
       "sell_quantity": 0.0,
+      "net_quantity": 10.0,
+      "avg_buy_price": 112.5,
+      "avg_sell_price": 0.0,
       "gross_notional": 1125.0,
       "fees": 0.5,
       "net_cash_flow": -1125.5
     }
   },
+  "positions": [
+    {
+      "symbol": "AAPL",
+      "trades": 1,
+      "buy_quantity": 0.0,
+      "sell_quantity": 4.0,
+      "net_quantity": -4.0,
+      "avg_buy_price": 0.0,
+      "avg_sell_price": 198.25,
+      "gross_notional": 793.0,
+      "fees": 0.35,
+      "net_cash_flow": 792.65
+    },
+    {
+      "symbol": "MSFT",
+      "trades": 1,
+      "buy_quantity": 6.0,
+      "sell_quantity": 0.0,
+      "net_quantity": 6.0,
+      "avg_buy_price": 421.1,
+      "avg_sell_price": 0.0,
+      "gross_notional": 2526.6,
+      "fees": 0.4,
+      "net_cash_flow": -2527.0
+    },
+    {
+      "symbol": "NVDA",
+      "trades": 1,
+      "buy_quantity": 10.0,
+      "sell_quantity": 0.0,
+      "net_quantity": 10.0,
+      "avg_buy_price": 112.5,
+      "avg_sell_price": 0.0,
+      "gross_notional": 1125.0,
+      "fees": 0.5,
+      "net_cash_flow": -1125.5
+    }
+  ],
+  "monthly": [
+    {
+      "month": "2026-05",
+      "trades": 3,
+      "symbols": 3,
+      "buy_quantity": 16.0,
+      "sell_quantity": 4.0,
+      "gross_notional": 4444.6,
+      "fees": 1.25,
+      "net_cash_flow": -2859.85
+    }
+  ],
   "journal_totals": {
     "fees": 1.25,
     "gross_notional": 4444.6,

@@ -77,6 +77,11 @@ def parse_args() -> argparse.Namespace:
         help="Optional CSV path for per-symbol open-position and basis snapshots.",
     )
     parser.add_argument(
+        "--monthly-csv",
+        type=Path,
+        help="Optional CSV path for monthly trade, fee, and cash-flow rollups.",
+    )
+    parser.add_argument(
         "--drop-duplicates",
         action="store_true",
         help="Drop exact duplicate normalized rows after parsing.",
@@ -261,12 +266,66 @@ def build_summary(trades: list[NormalizedTrade]) -> dict[str, object]:
         "trade_count": len(trades),
         "symbols": symbol_summary,
         "positions": position_rows,
+        "monthly": build_monthly_rows(trades),
         "journal_totals": {
             "fees": round(total_fees, 4),
             "gross_notional": round(total_notional, 4),
             "net_cash_flow": round(total_cash_flow, 4),
         },
     }
+
+
+def month_bucket(date_text: str) -> str:
+    stripped = date_text.strip()
+    if len(stripped) >= 7 and stripped[4] == "-":
+        return stripped[:7]
+    if len(stripped) >= 7 and stripped[2] == "/" and stripped[5] == "/":
+        month, _, year = stripped.split("/", 2)
+        return f"{year[:4]}-{month.zfill(2)}"
+    return stripped[:7] if len(stripped) >= 7 else stripped
+
+
+def build_monthly_rows(trades: list[NormalizedTrade]) -> list[dict[str, object]]:
+    by_month: dict[str, dict[str, float | int | set[str]]] = defaultdict(
+        lambda: {
+            "trades": 0,
+            "buy_quantity": 0.0,
+            "sell_quantity": 0.0,
+            "gross_notional": 0.0,
+            "fees": 0.0,
+            "net_cash_flow": 0.0,
+            "symbols": set(),
+        }
+    )
+
+    for trade in trades:
+        bucket = by_month[month_bucket(trade.date)]
+        bucket["trades"] += 1
+        if trade.action == "BUY":
+            bucket["buy_quantity"] += trade.quantity
+        else:
+            bucket["sell_quantity"] += trade.quantity
+        bucket["gross_notional"] += trade.gross_notional
+        bucket["fees"] += trade.fees
+        bucket["net_cash_flow"] += trade.cash_flow
+        bucket["symbols"].add(trade.symbol)
+
+    rows = []
+    for month in sorted(by_month):
+        bucket = by_month[month]
+        rows.append(
+            {
+                "month": month,
+                "trades": int(bucket["trades"]),
+                "symbols": len(bucket["symbols"]),
+                "buy_quantity": round(float(bucket["buy_quantity"]), 4),
+                "sell_quantity": round(float(bucket["sell_quantity"]), 4),
+                "gross_notional": round(float(bucket["gross_notional"]), 4),
+                "fees": round(float(bucket["fees"]), 4),
+                "net_cash_flow": round(float(bucket["net_cash_flow"]), 4),
+            }
+        )
+    return rows
 
 
 def write_position_csv(path: Path, positions: list[dict[str, object]]) -> None:
@@ -287,6 +346,24 @@ def write_position_csv(path: Path, positions: list[dict[str, object]]) -> None:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(positions)
+
+
+def write_monthly_csv(path: Path, monthly_rows: list[dict[str, object]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "month",
+        "trades",
+        "symbols",
+        "buy_quantity",
+        "sell_quantity",
+        "gross_notional",
+        "fees",
+        "net_cash_flow",
+    ]
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(monthly_rows)
 
 
 def write_normalized_csv(path: Path, trades: list[NormalizedTrade]) -> None:
@@ -335,11 +412,15 @@ def main() -> int:
     summary_json.write_text(json.dumps(summary_payload, indent=2), encoding="utf-8")
     if args.position_csv:
         write_position_csv(args.position_csv, summary_payload["positions"])
+    if args.monthly_csv:
+        write_monthly_csv(args.monthly_csv, summary_payload["monthly"])
 
     print(f"Normalized {len(trades)} trades into {output_csv}")
     print(f"Wrote summary JSON to {summary_json}")
     if args.position_csv:
         print(f"Wrote position CSV to {args.position_csv}")
+    if args.monthly_csv:
+        print(f"Wrote monthly CSV to {args.monthly_csv}")
     return 0
 
 

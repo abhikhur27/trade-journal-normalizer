@@ -14,6 +14,7 @@ Different exports label the same fields differently: `Ticker` vs `Symbol`, `Qty`
 - Writes a portable normalized CSV.
 - Writes a summary JSON with per-symbol totals and whole-journal totals.
 - Optionally writes a position snapshot CSV with net quantity and average buy/sell price per symbol.
+- Optionally writes a monthly rollup CSV for review-period cash flow and fee tracking.
 - Optional exact-row dedupe for duplicated export lines.
 
 ## Normalized output schema
@@ -43,6 +44,7 @@ python trade_journal_normalizer.py examples/sample_trades.csv ^
   --output-csv out/normalized.csv ^
   --summary-json out/summary.json ^
   --position-csv out/positions.csv ^
+  --monthly-csv out/monthly.csv ^
   --drop-duplicates
 ```
 
@@ -73,5 +75,5 @@ type examples/sample_trades.summary.json
 
 ```bash
 python -m py_compile trade_journal_normalizer.py
-python trade_journal_normalizer.py examples/sample_trades.csv --drop-duplicates
+python trade_journal_normalizer.py examples/sample_trades.csv --drop-duplicates --monthly-csv examples/sample_trades.monthly.csv
 ```
